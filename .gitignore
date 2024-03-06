@@ -1,0 +1,5 @@
+.vscode/
+archive_cogs/
+config.py
+mage.db
+mage.log
