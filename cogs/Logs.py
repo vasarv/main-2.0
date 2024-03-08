@@ -28,7 +28,7 @@ class Logs(commands.Cog):
     async def on_message_edit(self, before, after):
         """Если сообщение изменено, то логируем до и после изменения"""
         
-        if before.author.id != config.mage_id:
+        if (before.author.id != config.mage_id) and not (before.author.bot == True):
             current_date_time = datetime.datetime.now()
             emb = discord.Embed(title = 'Изменённое сообщение', color=after.author.color)
             emb.set_author(name = f"{before.author.name} изменил(-ла) сообщение", icon_url = before.author.avatar.url)

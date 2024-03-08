@@ -20,7 +20,7 @@ class ReactionToRole(commands.Cog):
     def __init__(self, client):
         self.client = client
         self.logger = logger
-        self.role_message_id = 1214968965957165056  # ID of the message that can be reacted to to add/remove a role.
+        self.role_message_id = 1214968965957165056
         self.default_channel = 1214255146184220762
         self.all_channel = []
         self.log = client.get_channel(config.log_channel)
@@ -55,37 +55,36 @@ class ReactionToRole(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
+        """Получение роли по реакции"""
         guild = await self.client.fetch_guild(payload.guild_id)
-        member = get(guild.members, id=payload.user_id)
         channel = self.client.get_channel(payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
         user = payload.member
-        if not (user.id == config.mage_id):
+
+        if not (user is None) and not (user.id == config.mage_id) and not (guild.get_role(self.ReactsToRoles[str(payload.emoji.id)]) in user.roles):
             if (channel.id == self.default_channel) and (message.id == self.role_message_id) and not (payload.emoji.id == None):
                 await payload.member.add_roles(guild.get_role(self.ReactsToRoles[str(payload.emoji.id)]))
+
         return
 
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
+        """Удаление роли по реакции"""
         message_id = payload.message_id
-        if message_id == self.role_message_id:
-            guild_id = payload.guild_id
-            global guild
-            guild = discord.utils.find(lambda g : g.id == guild_id, self.client.guilds)
+        guild = discord.utils.find(lambda g : g.id == payload.guild_id, self.client.guilds)
         member = discord.utils.find(lambda m : m.id == payload.user_id, guild.members)
-        
-        if member is not None and not (member.id == config.mage_id):
+
+        if (member is not None) and not (member.id == config.mage_id) and (guild.get_role(self.ReactsToRoles[str(payload.emoji.id)]) in member.roles):
             if (message_id == self.role_message_id) and not (payload.emoji.id == None):
                 await member.remove_roles(guild.get_role(self.ReactsToRoles[str(payload.emoji.id)]))
+
         return
 
 
 
-    
-    # await member.remove_roles(role)
-        # for rect in guild.emojis:
-        #     print(f"Name: {rect.name} [{rect.id}]")
+
+
 
 
 async def setup(client):

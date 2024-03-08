@@ -28,7 +28,7 @@ class commands(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def clear(self, ctx, amount=10**1000):
         """Очистить чат"""
-        
+
         await self.client.get_channel(config.log_channel).send(
             f"Пользователь {ctx.author.name} чистит чат {ctx.channel.name} на {amount if not amount == 10**1000 else "бесконечность"} сообщений"
         )
@@ -39,17 +39,18 @@ class commands(commands.Cog):
     async def ping(self, ctx):
         """Пингануть бота"""
         
-        zadersh = str(self.client.latency)
-        if zadersh[0] == "0":
+        delay = str(self.client.latency)
+        if delay[0] == "0":
             await ctx.send(
-                f":green_circle: - Я в сети. ||Пинг: **{zadersh[2:4]}ms.**||",
-                delete_after=10,
+                f":green_circle: - Я в сети. ||Пинг: **{delay[2:4]}ms.**||",
+                delete_after=3,
             )
         else:
             await ctx.send(
-                f":green_circle: - Я в сети. ||Пинг: **{zadersh[0]}s.**||",
-                delete_after=10,
+                f":green_circle: - Я в сети. ||Пинг: **{delay[0]}s.**||",
+                delete_after=3,
             )
+
         await ctx.message.delete()
 
     @commands.command()
@@ -57,8 +58,11 @@ class commands(commands.Cog):
     async def stats(self, ctx):
         """Получить информацию от участниках сервера"""
         
+        await ctx.message.delete()
+        
         online_members = []
         offline_members = []
+        
         for member in ctx.guild.members:
             if member.status is not discord.Status.offline:
                 online_members.append(member.name)
@@ -77,7 +81,23 @@ class commands(commands.Cog):
             value=f"{len(offline_members)}",
             inline=True,
         )
-        await ctx.reply(embed=embed)
+        await ctx.send(embed=embed, delete_after=5)
+        
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def emojis(self, ctx):
+        """Получить id всех emoji сервера"""
+        
+        await ctx.message.delete()
+
+        guild = discord.utils.find(lambda g : g.id == ctx.guild.id, self.client.guilds)
+        out: str = ""
+        for rect in guild.emojis:
+            out += "\n" + f"[{self.client.get_emoji(rect.id)}] - {rect.id}"
+
+        await ctx.send(out, delete_after=15)
+        
 
     @commands.command()
     @commands.has_permissions(administrator=True)
@@ -178,7 +198,7 @@ class commands(commands.Cog):
                     value=member.created_at.strftime("%a, %#d %B %Y, %I:%M %p UTC"),
                     inline=False,
                 )
-                await ctx.send(embed=emb)
+                await ctx.send(embed=emb, delete_after=10)
                 await self.log.send(
                     f"Юзер: [{ctx.author}] получил информацию о пользователе: [{member.name}]"
                 )

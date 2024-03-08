@@ -1,5 +1,9 @@
+.gitignore
 .vscode/
+env/
+venv/
 archive_cogs/
 config.py
 mage.db
 mage.log
+req.txt

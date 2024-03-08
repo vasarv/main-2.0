@@ -19,9 +19,10 @@ class Moderation(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def kick(self, ctx, member: discord.Member, *, reason=None):
         """Кикнуть юзера"""
-        
-        emb = discord.Embed(title="Kick", colour=discord.Color.orange())
+
         await ctx.message.delete()
+
+        emb = discord.Embed(title="Kick", colour=discord.Color.orange())
 
         await member.kick(reason=reason)
 
@@ -45,7 +46,7 @@ class Moderation(commands.Cog):
             icon_url=ctx.author.avatar.url,
         )
 
-        await ctx.send(embed=emb)
+        await ctx.send(embed=emb, delete_after=15)
 
     # ban
     @commands.command()
@@ -53,10 +54,12 @@ class Moderation(commands.Cog):
     async def ban(self, ctx, member: discord.Member, amount_time=None, *, reason=None):
         """Забанить юзера"""
 
+        await ctx.message.delete()
+
         current_date_time = datetime.datetime.now()
         now_date = current_date_time.time()
         emb = discord.Embed(title="Бан:", color=discord.Color.red())
-        await ctx.message.delete()
+        
         if "m" in amount_time:
             try:
                 await member.ban(reason=reason)
@@ -74,7 +77,7 @@ class Moderation(commands.Cog):
                     ),
                     icon_url=ctx.author.avatar.url,
                 )
-                await ctx.send(embed=emb)
+                await ctx.send(embed=emb, delete_after=15)
             except:
                 await ctx.send(f"Не возможно забанить пользователя: {member.mention}!")
             await asyncio.sleep(int(amount_time[:-1]) * 60)
@@ -84,7 +87,8 @@ class Moderation(commands.Cog):
             try:
                 await member.send(
                     embed=discord.Embed(
-                        description=f"""**{member.mention}** Время бана истекло, вы были разбанены."""
+                        description=f"""**{member.mention}** Время бана истекло, вы были разбанены.""",
+                        delete_after=15,
                     )
                 )
             except:
@@ -108,7 +112,7 @@ class Moderation(commands.Cog):
                     ),
                     icon_url=ctx.author.avatar.url,
                 )
-                await ctx.send(embed=emb)
+                await ctx.send(embed=emb, delete_after=15)
             except:
                 await ctx.send(f"Не возможно забанить пользователя: {member.mention}!")
             await asyncio.sleep(int(amount_time[:-1]) * 60 * 60)
@@ -118,7 +122,8 @@ class Moderation(commands.Cog):
             try:
                 await member.send(
                     embed=discord.Embed(
-                        description=f"""**{member.mention}** Время бана истекло, вы были разбанены."""
+                        description=f"""**{member.mention}** Время бана истекло, вы были разбанены.""",
+                        delete_after=15,
                     )
                 )
             except:
@@ -142,7 +147,7 @@ class Moderation(commands.Cog):
                     ),
                     icon_url=ctx.author.avatar.url,
                 )
-                await ctx.send(embed=emb)
+                await ctx.send(embed=emb, delete_after=15)
             except:
                 await ctx.send(f"Не возможно забанить пользователя: {member.mention}!")
             await asyncio.sleep(int(amount_time[:-1]) * 60 * 60 * 24)
@@ -152,7 +157,8 @@ class Moderation(commands.Cog):
             try:
                 await member.send(
                     embed=discord.Embed(
-                        description=f"""**{member.mention}** Время бана истекло, вы были разбанены."""
+                        description=f"""**{member.mention}** Время бана истекло, вы были разбанены.""",
+                        delete_after=15,
                     )
                 )
             except:
@@ -175,12 +181,15 @@ class Moderation(commands.Cog):
                     ),
                     icon_url=ctx.author.avatar.url,
                 )
-                await ctx.send(embed=emb)
+                await ctx.send(embed=emb, delete_after=30)
             except:
-                await ctx.send(f"Не возможно забанить пользователя: {member.mention}!")
-            await ctx.send(embed=emb)
+                await ctx.send(
+                    f"Не возможно забанить пользователя: {member.mention}!",
+                    delete_after=5,
+                )
+            await ctx.send(embed=emb, delete_after=30)
         else:
-            await ctx.send(f"Что-то пошло не так!")
+            await ctx.send(f"Что-то пошло не так!", delete_after=5)
 
         if amount_time == None:
             logger.info(
@@ -197,7 +206,7 @@ class Moderation(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def unban(self, ctx, *, member):
         """Разбанить юзера"""
-        
+
         await ctx.message.delete()
 
         self.banned_users = await ctx.guild.bans()
@@ -222,17 +231,19 @@ class Moderation(commands.Cog):
                 icon_url=ctx.author.avatar.url,
             )
 
-            await ctx.send(embed=emb)
+            await ctx.send(embed=emb, delete_after=15)
 
             return
 
-        await ctx.send(f"В бане нет юзера!")
+        await ctx.send(f"В бане нет юзера!", delete_after=5)
         return
 
     # mute
     @commands.has_permissions(administrator=True)
     @commands.command(aliases=["mute"])
-    async def __mute(self, ctx, member: discord.Member = None, amount_time=None, *, reason=None):
+    async def __mute(
+        self, ctx, member: discord.Member = None, amount_time=None, *, reason=None
+    ):
         """Замьютить юзера"""
 
         await ctx.message.delete()
@@ -276,7 +287,7 @@ class Moderation(commands.Cog):
                     icon_url=ctx.author.avatar.url,
                 )
 
-                await ctx.send(embed=emb)
+                await ctx.send(embed=emb, delete_after=30)
 
                 mute_role = discord.utils.get(ctx.guild.roles, id=config.mute_role_id)
                 await member.add_roles(mute_role)
@@ -291,6 +302,7 @@ class Moderation(commands.Cog):
                         embed=discord.Embed(
                             description=f"""**{member.mention}** Время мута истекло, вы были размьюченыю""",
                             color=0xFFFFFF,
+                            delete_after=15,
                         )
                     )
                     return
@@ -311,7 +323,7 @@ class Moderation(commands.Cog):
                     icon_url=ctx.author.avatar.url,
                 )
 
-                await ctx.send(embed=emb)
+                await ctx.send(embed=emb, delete_after=30)
 
                 mute_role = discord.utils.get(ctx.guild.roles, id=config.mute_role_id)
                 await member.add_roles(mute_role)
@@ -326,6 +338,7 @@ class Moderation(commands.Cog):
                         embed=discord.Embed(
                             description=f"""**{member.mention}** Время мута истекло, вы были размьючены.""",
                             color=0xFFFFFF,
+                            delete_after=15,
                         )
                     )
                     return
@@ -359,6 +372,7 @@ class Moderation(commands.Cog):
                         embed=discord.Embed(
                             description=f"""**{member.mention}** Время мута истекло, вы были размьючены.""",
                             color=0xFFFFFF,
+                            delete_after=15,
                         )
                     )
                     return
@@ -418,7 +432,7 @@ class Moderation(commands.Cog):
             ),
             icon_url=ctx.author.avatar.url,
         )
-        await ctx.send(embed=emb)
+        await ctx.send(embed=emb, delete_after=15)
 
     @commands.Cog.listener()
     async def on_ready(self):

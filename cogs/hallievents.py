@@ -35,7 +35,7 @@ class halloevents(commands.Cog):
 
         for ch in self.client.get_guild(member.guild.id).channels:
             if ch.id == config.hello_channel:
-                priv = [
+                hello_messages: list = [
                     f"{member.mention} | Приветствуем на сервере {member.guild.name}",
                     f"Загрузка... | Игрок {member.mention} оказывается на сервере {member.guild.name}",
                     f"{member.name} теперь с нами. Прошу любить и жаловать.",
@@ -45,18 +45,18 @@ class halloevents(commands.Cog):
                     f"У нас новенький! | Знакомьтесь:  {member.name}",
                     f"{member.name} вступает в ряды игроков на сервере {member.guild.name}!",
                 ]
-                embed = discord.Embed(description=f"""{choice(priv)}""", color=0x985DB3)
+                embed = discord.Embed(
+                    description=f"""{choice(hello_messages)}""", color=0x985DB3
+                )
                 embed.set_thumbnail(url=self.server_icon_link)
                 embed.set_footer(text="Приветики!")
                 sender3 = await self.client.get_channel(ch.id).send(embed=embed)
-                # await sender3.add_reaction(self.client.get_emoji(config.el_emoji))
-        if member.bot == True:
+                await sender3.add_reaction(self.client.get_emoji(1215544437380223027)) #hello emoji
             await member.add_roles(
-                discord.utils.get(member.guild.roles, id=config.botrole)
-            )
-        else:
-            await member.add_roles(
-                discord.utils.get(member.guild.roles, id=config.default_role)
+                discord.utils.get(
+                    member.guild.roles,
+                    id=config.botrole if member.bot == True else config.default_role,
+                )
             )
 
     @commands.Cog.listener()
@@ -68,14 +68,14 @@ class halloevents(commands.Cog):
         )
         for ch in self.client.get_guild(member.guild.id).channels:
             if ch.id == config.hello_channel:
-                pok = [
+                goodbye_messages: list = [
                     f"{member.name} покинул нас, скатертью дорожка, пусть его сожрут жабы.",
                     f"{member.name} ушёл за хлебом",
                     f"{member.name} покидает сервер",
                 ]
-                poker = str(choice(pok))
+                goodbye_message = str(choice(goodbye_messages))
                 if (
-                    poker
+                    goodbye_message
                     == f"{member.name} покинул нас, скатертью дорожка, пусть его сожрут жабы."
                 ):
                     embed = discord.Embed(
@@ -85,13 +85,15 @@ class halloevents(commands.Cog):
                     embed.set_thumbnail(url=self.server_icon_link)
                     embed.set_footer(text="Пока, пока...")
                     sender1 = await self.client.get_channel(ch.id).send(embed=embed)
-                    # await sender1.add_reaction(self.client.get_emoji(config.goldrip_emoji))
                     # await sender1.add_reaction(self.client.get_emoji(config.frog_emoji))
                 else:
-                    embed = discord.Embed(description=f"""{poker}""", color=0x985DB3)
+                    embed = discord.Embed(
+                        description=f"""{goodbye_message}""", color=0x985DB3
+                    )
                     embed.set_thumbnail(url=self.server_icon_link)
                     embed.set_footer(text="Пока, пока...")
                     sender2 = await self.client.get_channel(ch.id).send(embed=embed)
+                    await sender2.add_reaction(self.client.get_emoji(1215546809691152426)) #Press F
                     # await sender2.add_reaction(self.client.get_emoji(config.goldrip_emoji))
 
 
