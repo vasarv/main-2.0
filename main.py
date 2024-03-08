@@ -1,5 +1,4 @@
 import sys
-
 ##############################
 sys.dont_write_bytecode = True
 ##############################
@@ -10,9 +9,6 @@ from loguru import logger
 
 import discord
 from discord.ext import commands
-from discord.utils import get
-import os
-
 
 intents = discord.Intents().all()
 

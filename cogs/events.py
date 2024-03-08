@@ -3,17 +3,10 @@ import sys
 ##############################
 sys.dont_write_bytecode = True
 ##############################
-import discord
 from discord.ext import commands
 from discord.utils import get
-from random import choice
-import asyncio
 import config
-from asyncio import sleep
-import os
-import sqlite3 as sql
 from loguru import logger
-import requests
 
 
 class events(commands.Cog):

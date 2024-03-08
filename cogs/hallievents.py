@@ -1,11 +1,6 @@
 import discord
 from discord.ext import commands
-from discord.utils import get
-import asyncio
 import config
-from asyncio import sleep
-import os, sys
-import sqlite3 as sql
 from loguru import logger
 from random import choice
 
