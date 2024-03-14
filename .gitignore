@@ -7,3 +7,4 @@ config.py
 mage.db
 mage.log
 req.txt
+.timetracker

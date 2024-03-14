@@ -20,10 +20,11 @@ class ReactionToRole(commands.Cog):
         self.all_channel = []
         self.log = client.get_channel(config.log_channel)
         self.mentions = []
-        self.ReactsToRoles: dict = {
+        self.ReactsToRoles: dict[str, int] = {
             "1214991750691823636": 1214253939369840640,
             "1214991725915930714": 1214253443972337675,
-            "1214991685822451712": 1214253881798950912
+            "1214991685822451712": 1214253881798950912,
+            "1217181273076793434": 1215876117777616936
         }
 
     # @commands.Cog.listener()

@@ -20,7 +20,7 @@ class errors(commands.Cog):
         await ctx.message.delete()
         if isinstance(error, commands.CommandNotFound):
             await ctx.send(embed = discord.Embed(description = f'{ctx.author.mention}, команда не найдена!', color=0xFF0000), delete_after=3)
-            logger.error(f"Unknown command")
+            # logger.error(f"Unknown command")
 
 async def setup(client):
     await client.add_cog(errors(client))

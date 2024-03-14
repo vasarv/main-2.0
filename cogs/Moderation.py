@@ -8,244 +8,195 @@ from loguru import logger
 
 
 class Moderation(commands.Cog):
-
     def __init__(self, client):
         self.client = client
-        self.banned_users: list
 
     # kick
-    @commands.command()
+    @commands.command(aliases=["кик"])
     @commands.has_permissions(administrator=True)
     async def kick(self, ctx, member: discord.Member, *, reason=None):
         """Кикнуть юзера"""
 
-        await ctx.message.delete()
-
-        emb = discord.Embed(title="Kick", colour=discord.Color.orange())
-
         await member.kick(reason=reason)
 
-        logger.info(
-            f"Пользователь {ctx.author.name} кикнул юзера {member.name} по причине {reason}"
-        )
+        emb = discord.Embed(title="Kick", colour=discord.Color.orange())
 
         emb.set_author(name=member.name, icon_url=member.avatar.url)
         if reason == None:
             emb.add_field(
-                name="Kick user".format(member.mention),
-                value="Kicked user : {}".format(member.mention),
+                name="Kick user",
+                value=f"Kicked user : {member.mention}",
             )
         else:
             emb.add_field(
-                name=f"Kick user\nПричина кика: {reason}".format(member.mention),
-                value="Kicked user : {}".format(member.mention),
+                name=f"Kick user\nПричина кика: {reason}",
+                value=f"Kicked user: {member.mention}",
             )
         emb.set_footer(
             text="Был кикнут администратором".format(ctx.author.name),
             icon_url=ctx.author.avatar.url,
         )
 
+        logger.info(
+            f"Пользователь {ctx.author.name} кикнул юзера {member.name} по причине {reason}"
+        )
+
         await ctx.send(embed=emb, delete_after=15)
 
-    # ban
-    @commands.command()
-    @commands.has_permissions(administrator=True)
-    async def ban(self, ctx, member: discord.Member, amount_time=None, *, reason=None):
-        """Забанить юзера"""
-
         await ctx.message.delete()
+
+    # ban
+    @commands.command(aliases=["бан"])
+    @commands.has_permissions(administrator=True)
+    async def ban(self, ctx, member: discord.Member, *, reason=None):
+        """Забанить юзера"""
 
         current_date_time = datetime.datetime.now()
         now_date = current_date_time.time()
         emb = discord.Embed(title="Бан:", color=discord.Color.red())
+        ban_time: int
+
+        try:
+            await member.ban(reason=reason)
+        except:
+            await ctx.send(
+                f"Не возможно забанить пользователя: {member.mention}!",
+                delete_after=5,
+            )
+
+        emb.set_author(name=member.name, icon_url=member.avatar.url)
+        emb.add_field(name="За что бан?", value=f"{reason}")
+
+        # match amount_time[-1]:
+        #     case "s":
+        #         ban_time = int(amount_time[:-1])
+        #     case "m":
+        #         ban_time = int(amount_time[:-1]) * 60
+        #     case "h":
+        #         ban_time = int(amount_time[:-1]) * 60 * 60
+        #     case "d":
+        #         ban_time = int(amount_time[:-1]) * 60 * 60 * 24
+
+        # if "s" in amount_time:
+        #     emb.add_field(
+        #         name="На сколько?",
+        #         value=f"{amount_time[:-1]} секунд",
+        #     )
+        # elif "m" in amount_time:
+        #     emb.add_field(
+        #         name="На сколько?",
+        #         value=f"{amount_time[:-1]} минут",
+        #     )
+        # elif "h" in amount_time:
+        #     emb.add_field(
+        #         name="На сколько?",
+        #         value=f"{amount_time[:-1]} часа(-ов)",
+        #     )
+        # elif "d" in amount_time:
+        #     emb.add_field(
+        #         name="На сколько?",
+        #         value=f"{amount_time[:-1]} дней",
+        #     )
+        # elif amount_time == None:
+        #     emb.add_field(
+        #         name="На сколько?",
+        #         value=f"навсегда",
+        #     )
+        # else:
+        #     emb.add_field(
+        #         name="На сколько?",
+        #         value=f"навсегда",
+        #     )
+            # await ctx.send(f"Что-то пошло не так!", delete_after=5)
+
+        emb.set_footer(
+            text=f"{ctx.author} забанил. {current_date_time.hour}:{current_date_time.minute}/{current_date_time.day}.{current_date_time.month}.{current_date_time.year}".format(
+                ctx.author.name
+            ),
+            icon_url=ctx.author.avatar.url,
+        )
         
-        if "m" in amount_time:
-            try:
-                await member.ban(reason=reason)
-                emb.set_author(name=member.name, icon_url=member.avatar.url)
-                emb.add_field(
-                    name="За что бан?".format(reason), value="{}".format(reason)
-                )
-                emb.add_field(
-                    name="На сколько минут?".format(amount_time[:-1]),
-                    value="{} минут".format(amount_time[:-1]),
-                )
-                emb.set_footer(
-                    text=f"{ctx.author} забанил. {current_date_time.hour}:{current_date_time.minute}/{current_date_time.day}.{current_date_time.month}.{current_date_time.year}".format(
-                        ctx.author.name
-                    ),
-                    icon_url=ctx.author.avatar.url,
-                )
-                await ctx.send(embed=emb, delete_after=15)
-            except:
-                await ctx.send(f"Не возможно забанить пользователя: {member.mention}!")
-            await asyncio.sleep(int(amount_time[:-1]) * 60)
-            for ban_entry in self.banned_users:
-                user = ban_entry.user
-                await ctx.guild.unban(user)
-            try:
-                await member.send(
-                    embed=discord.Embed(
-                        description=f"""**{member.mention}** Время бана истекло, вы были разбанены.""",
-                        delete_after=15,
-                    )
-                )
-            except:
-                pass
+        await ctx.send(embed=emb, delete_after=15)
 
-        elif "h" in amount_time:
-            try:
-                await member.ban(reason=reason)
-                # emb = discord.Embed(title = 'Бан', color = discord.Color.red())
-                emb.set_author(name=member.name, icon_url=member.avatar.url)
-                emb.add_field(
-                    name="За что бан?".format(reason), value="{}".format(reason)
-                )
-                emb.add_field(
-                    name="На сколько часов?".format(amount_time[:-1]),
-                    value="{} часа(-ов)".format(amount_time[:-1]),
-                )
-                emb.set_footer(
-                    text=f"{ctx.author} забанил. {current_date_time.hour}:{current_date_time.minute}/{current_date_time.day}.{current_date_time.month}.{current_date_time.year}".format(
-                        ctx.author.name
-                    ),
-                    icon_url=ctx.author.avatar.url,
-                )
-                await ctx.send(embed=emb, delete_after=15)
-            except:
-                await ctx.send(f"Не возможно забанить пользователя: {member.mention}!")
-            await asyncio.sleep(int(amount_time[:-1]) * 60 * 60)
-            for ban_entry in self.banned_users:
-                user = ban_entry.user
-                await ctx.guild.unban(user)
-            try:
-                await member.send(
-                    embed=discord.Embed(
-                        description=f"""**{member.mention}** Время бана истекло, вы были разбанены.""",
-                        delete_after=15,
-                    )
-                )
-            except:
-                pass
-
-        elif "d" in amount_time:
-            try:
-                await member.ban(reason=reason)
-                # emb = discord.Embed(title = 'Бан', color = discord.Color.red())
-                emb.set_author(name=member.name, icon_url=member.avatar.url)
-                emb.add_field(
-                    name="За что бан?".format(reason), value="{}".format(reason)
-                )
-                emb.add_field(
-                    name="На сколько дней?".format(amount_time[:-1]),
-                    value="{} дней".format(amount_time[:-1]),
-                )
-                emb.set_footer(
-                    text=f"{ctx.author} забанил. {current_date_time.hour}:{current_date_time.minute}/{current_date_time.day}.{current_date_time.month}.{current_date_time.year}".format(
-                        ctx.author.name
-                    ),
-                    icon_url=ctx.author.avatar.url,
-                )
-                await ctx.send(embed=emb, delete_after=15)
-            except:
-                await ctx.send(f"Не возможно забанить пользователя: {member.mention}!")
-            await asyncio.sleep(int(amount_time[:-1]) * 60 * 60 * 24)
-            for ban_entry in self.banned_users:
-                user = ban_entry.user
-                await ctx.guild.unban(user)
-            try:
-                await member.send(
-                    embed=discord.Embed(
-                        description=f"""**{member.mention}** Время бана истекло, вы были разбанены.""",
-                        delete_after=15,
-                    )
-                )
-            except:
-                pass
-
-        elif None == amount_time:
-            try:
-                await member.ban(reason=reason)
-                emb.set_author(name=member.name, icon_url=member.avatar.url)
-                emb.add_field(
-                    name="За что бан?".format(reason), value="{}".format(reason)
-                )
-                emb.add_field(
-                    name="На сколько дней?".format(amount_time[:-1]),
-                    value="{} дней".format("∞"),
-                )
-                emb.set_footer(
-                    text=f"{ctx.author} забанил. {current_date_time.hour}:{current_date_time.minute}/{current_date_time.day}.{current_date_time.month}.{current_date_time.year}".format(
-                        ctx.author.name
-                    ),
-                    icon_url=ctx.author.avatar.url,
-                )
-                await ctx.send(embed=emb, delete_after=30)
-            except:
-                await ctx.send(
-                    f"Не возможно забанить пользователя: {member.mention}!",
-                    delete_after=5,
-                )
-            await ctx.send(embed=emb, delete_after=30)
-        else:
-            await ctx.send(f"Что-то пошло не так!", delete_after=5)
-
-        if amount_time == None:
-            logger.info(
+        logger.info(
                 f"Пользователь {member.name} забанен. Выдал бан: {ctx.author.name} по причине: {reason}"
             )
-        else:
-            logger.info(
-                f"Пользователь {member.name} забанен. Выдал бан: {ctx.author.name} по причине: {reason} на {amount_time}"
-            )
-        return
+        
+        # await asyncio.sleep(ban_time)
+
+        # for ban_entry in self.banned_users:
+        #     user = ban_entry.user
+        #     await ctx.guild.unban(user)
+        # try:
+        #     await member.send(
+        #         embed=discord.Embed(
+        #             description=f"""**{member.mention}** Время бана истекло, вы были разбанены."""
+        #         )
+        #     )
+        # except:
+        #     pass
+
+        await ctx.message.delete()
 
     # Unban
-    @commands.command()
+    @commands.command(aliases=["разбан"])
     @commands.has_permissions(administrator=True)
     async def unban(self, ctx, *, member):
         """Разбанить юзера"""
 
         await ctx.message.delete()
 
-        self.banned_users = await ctx.guild.bans()
+        banned_users = await ctx.guild.bans()
 
-        for ban_entry in self.banned_users:
+        for ban_entry in banned_users:
             user = ban_entry.user
-            await ctx.guild.unban(user)
 
-            emb = discord.Embed(title="Unban", colour=discord.Color.green())
+            if user.id == member.id:
+                await ctx.guild.unban(user)
 
-            logger.info(f"Пользователь {ctx.author.name} разбанил юзера {user.name}")
+                emb = discord.Embed(title="Unban", colour=discord.Color.green())
+                emb.set_author(name=user.name, icon_url=user.avatar.url)
+                emb.add_field(
+                    name="Unban user",
+                    value=f"Unbaned user: {user.mention}",
+                )
+                emb.set_footer(
+                    text="Был разбанен администратором",
+                    icon_url=ctx.author.avatar.url,
+                )
 
-            emb.set_author(name=user.name, icon_url=user.avatar.url)
+                await ctx.send(embed=emb, delete_after=15)
 
-            emb.add_field(
-                name="Unban user".format(user.mention),
-                value="Unbaned user : {}".format(user.mention),
-            )
+                logger.info(
+                    f"Пользователь {ctx.author.name} разбанил юзера {user.name}"
+                )
 
-            emb.set_footer(
-                text="Был разбанен администратором".format(ctx.author.name),
-                icon_url=ctx.author.avatar.url,
-            )
+                return
 
-            await ctx.send(embed=emb, delete_after=15)
-
-            return
-
-        await ctx.send(f"В бане нет юзера!", delete_after=5)
-        return
+        await ctx.send(f"Юзер не забанен!", delete_after=5)
 
     # mute
+    @commands.command(aliases=["мьют"])
     @commands.has_permissions(administrator=True)
-    @commands.command(aliases=["mute"])
-    async def __mute(
+    async def mute(
         self, ctx, member: discord.Member = None, amount_time=None, *, reason=None
     ):
         """Замьютить юзера"""
 
-        await ctx.message.delete()
+        mute_time: int
+        current_date_time = datetime.datetime.now()
+        mute_role = discord.utils.get(ctx.guild.roles, id=config.mute_role_id)
+
+        match amount_time[-1]:
+            case "s":
+                mute_time = int(amount_time[:-1])
+            case "m":
+                mute_time = int(amount_time[:-1]) * 60
+            case "h":
+                mute_time = int(amount_time[:-1]) * 60 * 60
+            case "d":
+                mute_time = int(amount_time[:-1]) * 60 * 60 * 24
+
         if member is None:
             await ctx.send(
                 embed=discord.Embed(
@@ -268,147 +219,64 @@ class Moderation(commands.Cog):
                 )
             )
         else:
-            current_date_time = datetime.datetime.now()
-            if "m" in amount_time:
-                emb = discord.Embed(title="Мьют", color=0x000001)
-                emb.set_author(name=member.name, icon_url=member.avatar.url)
+            emb = discord.Embed(title="Мьют", color=0x000001)
+            emb.set_author(name=member.name, icon_url=member.avatar.url)
+            emb.add_field(name="За что мьют?", value=f"{reason}")
+
+            if "s" in amount_time:
                 emb.add_field(
-                    name="За что мьют?".format(reason), value="{}".format(reason)
+                    name="На сколько секунд?",
+                    value=f"{amount_time[:-1]} секунд",
                 )
+            elif "m" in amount_time:
                 emb.add_field(
-                    name="На сколько минут?".format(amount_time[:-1]),
-                    value="{} минут".format(amount_time[:-1]),
+                    name="На сколько минут?",
+                    value=f"{amount_time[:-1]} минут",
                 )
-                emb.set_footer(
-                    text=f"{ctx.author} замьютил. {current_date_time.hour}:{current_date_time.minute}/{current_date_time.day}.{current_date_time.month}.{current_date_time.year}".format(
-                        ctx.author.name
-                    ),
-                    icon_url=ctx.author.avatar.url,
-                )
-
-                await ctx.send(embed=emb, delete_after=30)
-
-                mute_role = discord.utils.get(ctx.guild.roles, id=config.mute_role_id)
-                await member.add_roles(mute_role)
-                logger.info(
-                    f"Пользователь {member.name} был замьючен. Выдал мьют: {ctx.author.name}] на [{amount_time}] по причине [{reason}]"
-                )
-                await asyncio.sleep(int(amount_time[:-1]) * 60)
-
-                if mute_role in member.roles:
-                    await member.remove_roles(mute_role)
-                    await ctx.send(
-                        embed=discord.Embed(
-                            description=f"""**{member.mention}** Время мута истекло, вы были размьюченыю""",
-                            color=0xFFFFFF,
-                            delete_after=15,
-                        )
-                    )
-                    return
             elif "h" in amount_time:
-                emb = discord.Embed(title="Мьют", color=0x000001)
-                emb.set_author(name=member.name, icon_url=member.avatar.url)
                 emb.add_field(
-                    name="За что мьют?".format(reason), value="{}".format(reason)
+                    name="На сколько часов?",
+                    value=f"{amount_time[:-1]} часа(-ов)",
                 )
-                emb.add_field(
-                    name="На сколько часов?".format(amount_time[:-1]),
-                    value="{} часа(-ов)".format(amount_time[:-1]),
-                )
-                emb.set_footer(
-                    text=f"{ctx.author} замьютил. {current_date_time.hour}:{current_date_time.minute}/{current_date_time.day}.{current_date_time.month}.{current_date_time.year}".format(
-                        ctx.author.name
-                    ),
-                    icon_url=ctx.author.avatar.url,
-                )
-
-                await ctx.send(embed=emb, delete_after=30)
-
-                mute_role = discord.utils.get(ctx.guild.roles, id=config.mute_role_id)
-                await member.add_roles(mute_role)
-                logger.info(
-                    f"Пользователь {member.name} был замьючен. Выдал мьют: {ctx.author.name}] на [{amount_time}] по причине [{reason}]"
-                )
-                await asyncio.sleep(int(amount_time[:-1]) * 60 * 60)
-
-                if mute_role in member.roles:
-                    await member.remove_roles(mute_role)
-                    await ctx.send(
-                        embed=discord.Embed(
-                            description=f"""**{member.mention}** Время мута истекло, вы были размьючены.""",
-                            color=0xFFFFFF,
-                            delete_after=15,
-                        )
-                    )
-                    return
             elif "d" in amount_time:
-                emb = discord.Embed(title="Мьют", color=0x000001)
-                emb.set_author(name=member.name, icon_url=member.avatar.url)
                 emb.add_field(
-                    name="За что мьют?".format(reason), value="{}".format(reason)
+                    name="На сколько дней?",
+                    value=f"{amount_time[:-1]} дней",
                 )
-                emb.add_field(
-                    name="На сколько дней?".format(amount_time[:-1]),
-                    value="{} дней".format(amount_time[:-1]),
-                )
-                emb.set_footer(
-                    text=f"{ctx.author} замьютил. {current_date_time.hour}:{current_date_time.minute}/{current_date_time.day}.{current_date_time.month}.{current_date_time.year}".format(
-                        ctx.author.name
-                    ),
-                    icon_url=ctx.author.avatar.url,
-                )
-
-                mute_role = discord.utils.get(ctx.guild, id=config.mute_role_id)
-                await member.add_roles(mute_role)
-                logger.debug(
-                    f"Пользователь [{ctx.author.mention}] выдал мьют пользователю [{member.name}] на [{amount_time}] по причине [{reason}]"
-                )
-                await asyncio.sleep(int(amount_time[:-1]) * 60 * 60 * 24)
-
-                if mute_role in member.roles:
-                    await member.remove_roles(mute_role)
-                    await ctx.send(
-                        embed=discord.Embed(
-                            description=f"""**{member.mention}** Время мута истекло, вы были размьючены.""",
-                            color=0xFFFFFF,
-                            delete_after=15,
-                        )
-                    )
-                    return
             else:
-                emb = discord.Embed(title="Мьют", color=0x000001)
-                emb.set_author(name=member.name, icon_url=member.avatar.url)
-                emb.add_field(
-                    name="За что мьют?".format(reason), value="{}".format(reason)
-                )
-                emb.add_field(
-                    name="На сколько секунд?".format(amount_time[:-1]),
-                    value="{} секунд".format(amount_time[:-1]),
-                )
-                emb.set_footer(
-                    text=f"{ctx.author} замьютил. {current_date_time.hour}:{current_date_time.minute}/{current_date_time.day}.{current_date_time.month}.{current_date_time.year}".format(
-                        ctx.author.name
-                    ),
-                    icon_url=ctx.author.avatar.url,
-                )
+                await ctx.send(f"Что-то пошло не так!", delete_after=5)
 
-                mute_role = discord.utils.get(ctx.guild.roles, id=config.mute_role_id)
-                await member.add_roles(mute_role)
-                logger.info(
-                    f"Пользователь {member.name} был замьючен. Выдал мьют: {ctx.author.name}] на [{amount_time}] по причине [{reason}]"
-                )
-                await asyncio.sleep(int(amount_time[:-1]))
-                if mute_role in member.roles:
-                    await member.remove_roles(mute_role)
-                    return
+            emb.set_footer(
+                text=f"{ctx.author} замьютил. {current_date_time.hour}:{current_date_time.minute}/{current_date_time.day}.{current_date_time.month}.{current_date_time.year}".format(
+                    ctx.author.name
+                ),
+                icon_url=ctx.author.avatar.url,
+            )
 
-    @commands.command()
+            await member.add_roles(mute_role)
+
+            await ctx.send(embed=emb, delete_after=30)
+
+            logger.info(
+                f"Пользователь {member.name} был замьючен. Выдал мьют: {ctx.author.name}] на [{amount_time}] по причине [{reason}]"
+            )
+
+            await asyncio.sleep(mute_time)
+
+            if mute_role in member.roles:
+                await member.remove_roles(mute_role)
+                return
+
+        await ctx.message.delete()
+
+    @commands.command(aliases=["размьют"])
     @commands.has_permissions(administrator=True)
     async def unmute(self, ctx, member: discord.Member = None):
         """Размьютить юзера"""
 
-        await ctx.message.delete()
         current_date_time = datetime.datetime.now()
+        mute_role = discord.utils.get(ctx.guild.roles, id=config.mute_role_id)
+
         if member is None:
             await ctx.send(
                 embed=discord.Embed(
@@ -416,7 +284,7 @@ class Moderation(commands.Cog):
                     description=f"Пример: {command_prefix}unmute **@user**",
                 )
             )
-        mute_role = discord.utils.get(ctx.guild.roles, id=config.mute_role_id)
+
         await member.remove_roles(mute_role)
 
         emb = discord.Embed(
@@ -433,13 +301,15 @@ class Moderation(commands.Cog):
         )
         await ctx.send(embed=emb, delete_after=15)
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        self.guild = await self.client.fetch_guild(config.serverid)  # You server id
-        self.mutedrole = discord.utils.get(
-            self.guild.roles, id=config.mute_role_id
-        )  # Mute role id
-        self.check_mutes.start()
+        await ctx.message.delete()
+
+    # @commands.Cog.listener()
+    # async def on_ready(self):
+    #     self.guild = await self.client.fetch_guild(config.serverid)  # You server id
+    #     self.mutedrole = discord.utils.get(
+    #         self.guild.roles, id=config.mute_role_id
+    #     )  # Mute role id
+    #     self.check_mutes.start()
 
 
 async def setup(client):
